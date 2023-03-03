@@ -24,7 +24,7 @@ void* fill_fuel(void* arg){
         pthread_mutex_unlock(&fuel_tank_mutex);
         // Signal the user that we have filled the fuel with some val
         pthread_cond_signal(&fuel_tank_cond);
-        sleep(1);
+        sleep(0.00001);
     }
 
 
@@ -36,14 +36,17 @@ void* use_fuel(void* arg){
     pthread_mutex_lock(&fuel_tank_mutex);
 
     // Setting the lower limit to be used from the tank to 10
-    while (fuel_tank < 40) {
-        printf("Waiting for the fuel\n"); 
-        // Wait for the fuel to be filled by another thread 
-        pthread_cond_wait(&fuel_tank_cond, &fuel_tank_mutex);
+    while (true) {
+        if (fuel_tank < 40) {
+            printf("Waiting for the fuel: %d \n", fuel_tank); 
+            // Wait for the fuel to be filled by another thread 
+            pthread_cond_wait(&fuel_tank_cond, &fuel_tank_mutex);
+        }
+        else {
+            fuel_tank -= 40;
+            printf("Got the fuel, using it: %d\n", fuel_tank);
+        }
     }
-
-    fuel_tank -= 40;
-    printf("Got the fuel, using it!\n");
 
     pthread_mutex_unlock(&fuel_tank_mutex);
 
