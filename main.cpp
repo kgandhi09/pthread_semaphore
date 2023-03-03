@@ -12,23 +12,51 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void* thread_routine( void* ) {
-    printf("Test from thread routine\n");
+int shared_arr[10] = {1,2,3,4,5,6,7,8,9,10};
+pthread_mutex_t thread_mutex;
 
-    //returning null void*
-    void* ret = NULL;
-    return ret;
+void* thread_routine( void* arg) {
+    int shared_arr_idx = *(int*)arg;
+    int size_shared_arr = (sizeof(shared_arr)/sizeof(shared_arr[0])/2);
+    int sum_elems_per_thread = 0;
+
+    for(int i = 0; i < size_shared_arr; i++){
+        sum_elems_per_thread += shared_arr[shared_arr_idx*size_shared_arr + i];
+    }
+
+    //returning the argument as void pointer
+    *(int*)arg = sum_elems_per_thread;
+    return arg;
 }
 
 int main(int argc, char *argv[]) {
-    // Create a thread
-    pthread_t thread1, thread2;
-    if (pthread_create(&thread1, NULL, &thread_routine, NULL) != 0) printf("Failure to create a new thread\n"); 
-    if (pthread_create(&thread2, NULL, &thread_routine, NULL) != 0) printf("Failure to create a new thread\n"); 
 
-    // Join the thread
-    if(pthread_join(thread1, NULL) != 0) printf("Failure to call thread wait for termination\n");
-    if(pthread_join(thread2, NULL) != 0) printf("Failure to call thread wait for termination\n");
+    pthread_t threads[2];
+
+    // Initialize the thread mutex without any attributes
+    pthread_mutex_init(&thread_mutex, NULL);
+    
+    // Create two threads in a for loop
+    for(int i = 0; i < sizeof(threads)/sizeof(threads[0]); i++){
+        int *a = (int*)malloc(sizeof(int));
+        *a = i;
+        //Passing the the number of thread as argument to the thread
+        pthread_create(&threads[i], NULL, &thread_routine, a);
+    }
+
+    int global_sum = 0;
+
+    // Join the threads 
+    for(int i = 0; i < sizeof(threads)/sizeof(threads[0]); i++){
+        void* thread_return_value;
+        pthread_join(threads[i], &thread_return_value);
+        global_sum += *(int*)thread_return_value;
+    }
+
+    printf("Global sum calculated by two threads: %d\n", global_sum);
+
+    // Destroy the mutex
+    pthread_mutex_destroy(&thread_mutex);
 
     return 0;
 }
