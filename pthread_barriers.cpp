@@ -1,7 +1,6 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <time.h>
 
 #define NUM_THREADS 12
@@ -16,10 +15,10 @@ pthread_barrier_t status_set_barrier;
 void* roll_dice(void* arg){
     
     int index = *(int*)arg;
-
+ 
     // Roll the dice and store the random number
     dice_val[index] = (rand() % 6 ) + 1;
-
+ 
     // Raise the barrier until all dice rolling threads arrive here 
     pthread_barrier_wait(&dice_val_barrier);
     pthread_barrier_wait(&status_set_barrier);
@@ -31,10 +30,10 @@ void* roll_dice(void* arg){
     else {
         printf("Dice Value: %d, I won :)\n", dice_val[index]);
     }
-
+ 
     free(arg);
     return nullptr;
-}
+} 
 
 int main(int argc, char* argv[]){
 
@@ -80,4 +79,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
